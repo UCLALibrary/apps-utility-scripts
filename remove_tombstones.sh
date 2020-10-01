@@ -22,6 +22,8 @@
 ###
 ### Usage
 ### 
+### (Prepare the CSV file of ark's first)
+### 
 ### 1. To delete items from Fedora
 ### 
 ###   - Set the ssh tunnel:
@@ -38,7 +40,7 @@
 ### 
 ###   - run the script
 ### 
-### ./rt.sh
+### ./remove_tombstomes.sh
 ### 
 ### 
 ### 2. To delete items from SOLR
@@ -56,9 +58,12 @@
 ### ###curl -X DELETE A
 ### ###curl -X DELETE B
 ### 
+### 
+###   - uncomment other lines for comments as needed
+### 
 ###   - run the script
 ### 
-### ./rt.sh
+### ./remove_tombstomes.sh
 ### 
 
 cnt=0
@@ -68,10 +73,11 @@ do
   then
     cnt=$((cnt+1))
     #echo "${cnt} - ${line}"
-    line2=${line#ark:/}
+    line1=$(echo $line | sed 's/,*$//')
+    #echo "1 - ${line1}"
+    line2=${line1#ark:/}
     #echo "2 - ${line2}"
     line3=$(echo $line2 | sed 's/,*$//')
-    #  line3=${line2::-1}
     #echo "3 - ${line3}"
     line4=${line3/\//-}
     #echo "4 - ${line4}"
@@ -92,11 +98,11 @@ do
     line8=${line7}${line5}
     #echo "8 - ${line8}"
     line9="http://localhost:9984/fcrepo/rest/prod${line8}"
-    echo ""
-    echo ""
-    echo "9 - ${line9}"
+    #echo ""
+    #echo ""
+    #echo "9 - ${line9}"
     ### query status item with current ark
-    curl ${line9}
+    #curl ${line9}
 
     ### delete item from Fedora using the current ark
     #echo "curl -X DELETE ${line9}"
@@ -108,15 +114,21 @@ do
     #echo "curl -X DELETE ${line10}"
     #curl -X DELETE "${line10}"
     
+    ### show item from Solr using the current ark
+    line11="curl http://localhost:9983/solr/calursus/select?q=ark_ssi:\"${line1}\""
+    echo "11 - ${line11}"
+    curl http://localhost:9983/solr/calursus/select?q=ark_ssi:"${line1}"
+
     ### delete item from Solr using the current ark
-    #line11="curl http://localhost:9983/solr/calursus/update?commit=true -H \"Content-Type: text/xml\" --data-binary \'<delete><query>ark_ssi:\"${line2}\"</query></delete>\'"
-    #curl http://localhost:9983/solr/calursus/update?commit=true -H \"Content-Type: text/xml\" --data-binary \'<delete><query>ark_ssi:\"${line2}\"</query></delete>\'
-    #echo "11 - ${line11}"
+    #line12="http://localhost:9983/solr/calursus/update?commit=true -H Content-Type:text/xml --data-binary <delete><query>ark_ssi:\"${line1}\"</query></delete>"
+    #echo "12 - ${line12}"
+    #curl $line12
+    #curl -v $line12
+
   fi
 
-  ### This delay did not always work as sometimes the curl aommand took many minutes to complete
+  ### This delay did not always work as sometimes the curl command took many minutes to complete
   #sleep 240
 
 done < sinai_prod.csv
-###done < sinai_prod_test.csv
-
+###done < single_ark.csv
